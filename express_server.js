@@ -9,6 +9,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.use(express.urlencoded({ extended: true }));
+
+function generateRandomString() {
+  return Math.random().toString(36).slice(2, 2);
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -18,8 +24,17 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
+// logs the request body and gives a dummy response
+app.post("/urls", (req, res) => {
+  console.log(req.body);
+  res.send("Ok");
+});
+
 app.get("/urls/:id", (req, res) => {
-  // res.send(req.params);
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
