@@ -12,7 +12,7 @@ const urlDatabase = {
 app.use(express.urlencoded({ extended: true }));
 
 function generateRandomString() {
-  return Math.random().toString(36).slice(2, 2);
+  return Math.random().toString(36).slice(2, 8);
 }
 
 app.get("/", (req, res) => {
@@ -30,8 +30,14 @@ app.get("/urls/new", (req, res) => {
 
 // logs the request body and gives a dummy response
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
+  const id = generateRandomString();
+  urlDatabase[id] = req.body.longURL;
+  res.redirect(`/urls/${id}`);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
