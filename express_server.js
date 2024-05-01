@@ -50,7 +50,7 @@ app.post("/urls/:id", (req, res) => {
 
 // sets up a cookie with the info taken by the form at _header.ejs
 app.post("/login", (req, res) => {
-  res.cookie(req.body.userName);
+  res.cookie('username', req.body.username);
   res.redirect("/urls");
 });
 
