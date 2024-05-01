@@ -48,6 +48,12 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
+// sets up a cookie with the info taken by the form at _header.ejs
+app.post("/login", (req, res) => {
+  res.cookie(req.body.userName);
+  res.redirect("/urls");
+});
+
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
