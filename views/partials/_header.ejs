@@ -14,6 +14,9 @@
             <input class="form-control" type="text" name="username" placeholder="Username"
               style="width: 300px; margin: 1em" />
             <button type="submit" class="btn btn-primary">Login</button>
+            <h1>
+              <%= username: req.cookies["username"] %>
+            </h1>
           </div>
         </form>
       </div>
