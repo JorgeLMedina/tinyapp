@@ -12,6 +12,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  }
+};
+
 app.use(express.urlencoded({ extended: true }));
 
 function generateRandomString() {
@@ -49,6 +62,29 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+// sets up a cookie with the info taken by the form at _header.ejs
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body.username);
+  res.redirect("/urls");
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
+  res.redirect("/urls");
+});
+
+// Handles the registration data from "/login"
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  users[id] = {
+    id,
+    email: req.body.email,
+    password: req.body.password
+  };
+  res.cookie("user_id", id);
+  res.redirect("/urls");
+});
+
 // removes URL resource from object
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
@@ -59,17 +95,6 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   urlDatabase[id] = req.body.updatedURL;
   console.log(urlDatabase)
-  res.redirect("/urls");
-});
-
-// sets up a cookie with the info taken by the form at _header.ejs
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect("/urls");
-});
-
-app.post("/logout", (req, res) => {
-  res.clearCookie('username');
   res.redirect("/urls");
 });
 
