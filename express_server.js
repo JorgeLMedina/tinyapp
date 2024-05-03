@@ -34,6 +34,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// logs /register template to login
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+
 // logs the request body and gives a dummy response
 app.post("/urls", (req, res) => {
   const id = generateRandomString();
