@@ -36,7 +36,10 @@ app.get("/urls/new", (req, res) => {
 
 // logs /register template to login
 app.get("/register", (req, res) => {
-  res.render("register");
+  const templateVars = {
+    username: null
+  };
+  res.render("register", templateVars);
 });
 
 // logs the request body and gives a dummy response
