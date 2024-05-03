@@ -78,7 +78,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// logs /register template to login
+// logs /register template 
 app.get("/register", (req, res) => {
   const id = req.cookies["user_id"];
   const templateVars = {
@@ -86,6 +86,15 @@ app.get("/register", (req, res) => {
     user: users[id]
   };
   res.render("register", templateVars);
+});
+
+// renders login.ejs
+app.get("/login", (req, res) => {
+  const id = req.cookies["user_id"];
+  const templateVars = {
+    user: users[id]
+  };
+  res.render("login", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
