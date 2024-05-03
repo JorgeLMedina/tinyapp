@@ -43,7 +43,7 @@ function generateRandomString() {
 }
 
 // Finds if the users object already has a user registered with the email
-const getUserByEmail = function (email, users) {
+const findUserByEmail = function (email, users) {
   for (const key in users) {
     if (users[key].email === email) {
       return users[key];
@@ -138,8 +138,8 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (email === "" || password === "") {
-    res.sendStatus(400);
-  } else if (!getUserByEmail(email, users)) {
+    res.status(400).send('Email and password cannot be empty.');
+  } else if (!findUserByEmail(email, users)) {
     const id = generateRandomString();
     users[id] = {
       id,
@@ -152,7 +152,7 @@ app.post("/register", (req, res) => {
     res.cookie("user_id", id);
     res.redirect("/urls");
   } else {
-    res.sendStatus(400);
+    res.status(400).send('This email is already registered.');
   }
 });
 
