@@ -133,13 +133,30 @@ app.post("/urls", (req, res) => {
 
 // sets up a cookie with the info taken by the form at _header.ejs
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  // res.cookie('user', req.body.email);
+
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = findUserByEmail(email, users);
+
+  if (email === "" || password === "") { // No email or password input
+    res.status(403).send('Email and/or password cannot be empty.');
+  } else if (!user) {
+    res.status(403).send('This email is not registered.');
+  }
+
+  if (user.password !== password) { // EMAIL CORRECT PASSWORD INCORRECT -------------------------------------
+    res.status(403).send('Wrong password.');
+  }  // HAPPY PATH! email and password found in "users" object
+
+  const userId = user.id;
+  res.cookie('user_id', userId);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 // Handles the registration data from "/login"
@@ -147,8 +164,10 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (email === "" || password === "") {
-    res.status(400).send('Email and password cannot be empty.');
-  } else if (!findUserByEmail(email, users)) {
+    res.status(400).send('Email and/or password cannot be empty.');
+  }
+
+  if (!findUserByEmail(email, users)) {
     const id = generateRandomString();
     users[id] = {
       id,
@@ -160,9 +179,9 @@ app.post("/register", (req, res) => {
     };
     res.cookie("user_id", id);
     res.redirect("/urls");
-  } else {
-    res.status(400).send('This email is already registered.');
   }
+
+  res.status(400).send('This email is already registered.');
 });
 
 // removes URL resource from object
