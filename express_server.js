@@ -75,31 +75,54 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[id]
   };
-  res.render("urls_new", templateVars);
+
+  if (id === undefined) {
+    res.render("login", templateVars);
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 // logs /register template 
 app.get("/register", (req, res) => {
   const id = req.cookies["user_id"];
   const templateVars = {
-    // username: null
+    urls: urlDatabase,
     user: users[id]
   };
-  res.render("register", templateVars);
+
+  if (id === undefined) {
+    res.render("register", templateVars);
+  } else {
+    res.render("urls_index", templateVars);
+  }
 });
 
 // renders login.ejs
 app.get("/login", (req, res) => {
   const id = req.cookies["user_id"];
   const templateVars = {
+    urls: urlDatabase,
     user: users[id]
   };
-  res.render("login", templateVars);
+
+  if (id === undefined) {
+    res.render("login", templateVars);
+  } else {
+    res.render("urls_index", templateVars);
+  }
 });
 
+// Redirects the shortened version to actual URL assigned in urlDatabase
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  const id = req.params.id;
+  const longURL = urlDatabase[id];
+
+  if (longURL === undefined) {
+    res.status(403).send(`This short URL doesn't have anything assigned yet, please adjust that at 'localhost:8080/urls/new'`);
+  } else {
+    res.redirect(longURL);
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -126,9 +149,15 @@ app.get("/hello", (req, res) => {
 
 // logs the request body and gives a dummy response
 app.post("/urls", (req, res) => {
-  const id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
-  res.redirect(`/urls/${id}`);
+  const idCookie = req.cookies["user_id"];
+
+  if (idCookie === undefined) {
+    res.status(403).send('Please register and/or login to be able to shorten URL');
+  } else {
+    const id = generateRandomString();
+    urlDatabase[id] = req.body.longURL;
+    res.redirect(`/urls/${id}`);
+  }
 });
 
 // sets up a cookie with the info taken by the form at _header.ejs
@@ -141,12 +170,15 @@ app.post("/login", (req, res) => {
 
   if (email === "" || password === "") { // No email or password input
     res.status(403).send('Email and/or password cannot be empty.');
+    return;
   } else if (!user) {
     res.status(403).send('This email is not registered.');
+    return;
   }
 
   if (user.password !== password) { // EMAIL CORRECT PASSWORD INCORRECT -------------------------------------
     res.status(403).send('Wrong password.');
+    return;
   }  // HAPPY PATH! email and password found in "users" object
 
   const userId = user.id;
@@ -165,6 +197,7 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   if (email === "" || password === "") {
     res.status(400).send('Email and/or password cannot be empty.');
+    return;
   }
 
   if (!findUserByEmail(email, users)) {
@@ -179,9 +212,11 @@ app.post("/register", (req, res) => {
     };
     res.cookie("user_id", id);
     res.redirect("/urls");
+    return;
   }
 
   res.status(400).send('This email is already registered.');
+  return;
 });
 
 // removes URL resource from object
