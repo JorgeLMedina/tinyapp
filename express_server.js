@@ -18,8 +18,14 @@ app.use(express.urlencoded({ extended: true }));
 /////////////////////////
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouse.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn2: {
+    longURL: "http://www.lighthouse.ca",
+    userID: "aJ48lW"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "aJ48lW"
+  }
 };
 
 const users = {
@@ -52,6 +58,18 @@ const findUserByEmail = function (email, users) {
   return null;
 };
 
+// Returns only URLs created by logged in user from urlDatabase
+const urlsForUser = function (id) {
+  const urlsByUserId = {};
+
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      urlsByUserId[key] = urlDatabase[key];
+    }
+  }
+  return urlsByUserId;
+};
+
 /////////////////////////
 // END POINTS --- GET
 /////////////////////////
@@ -62,12 +80,18 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const id = req.cookies["user_id"];
+  const urlDatabaseByID = urlsForUser(id);
   const templateVars = {
     // username: req.cookies["username"],
-    urls: urlDatabase,
+    urls: urlDatabaseByID,
     user: users[id]
   };
-  res.render("urls_index", templateVars);
+
+  if (id === undefined) {
+    res.status(403).send('Please log in to see availables shortURLs')
+  } else {
+    res.render("urls_index", templateVars);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -86,8 +110,9 @@ app.get("/urls/new", (req, res) => {
 // logs /register template 
 app.get("/register", (req, res) => {
   const id = req.cookies["user_id"];
+  const urlDatabaseByID = urlsForUser(id);
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlDatabaseByID,
     user: users[id]
   };
 
@@ -116,7 +141,7 @@ app.get("/login", (req, res) => {
 // Redirects the shortened version to actual URL assigned in urlDatabase
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id];
+  const longURL = urlDatabase[id].longURL;
 
   if (longURL === undefined) {
     res.status(403).send(`This short URL doesn't have anything assigned yet, please adjust that at 'localhost:8080/urls/new'`);
@@ -127,11 +152,27 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies["user_id"];
+  const id = req.params.id;
+  const longURL = urlDatabase[id].longURL;
+  // console.log(longURL);
   const templateVars = {
-    // username: req.cookies["username"],
-    id: req.params.id, longURL: urlDatabase[req.params.id],
+    id,
+    longURL,
     user: users[userId]
   };
+  // const urlByUserArr = Object.keys(urlsForUser(userId));
+
+
+  if (userId === undefined) {
+    res.status(403).send('Please sign in to be able to generate tinyURLs');
+    return;
+  }
+
+  if (urlDatabase[id].userID !== userId) {
+    res.status(403).send('You can access and/or edit only tinyURL pages created by you');
+    return;
+  }
+
   res.render("urls_show", templateVars);
 });
 
@@ -152,10 +193,13 @@ app.post("/urls", (req, res) => {
   const idCookie = req.cookies["user_id"];
 
   if (idCookie === undefined) {
-    res.status(403).send('Please register and/or login to be able to shorten URL');
+    res.status(403).send('Please register and/or login to be able to tinyURL');
   } else {
     const id = generateRandomString();
-    urlDatabase[id] = req.body.longURL;
+    urlDatabase[id] = {
+      longURL: req.body.longURL,
+      userID: idCookie
+    };
     res.redirect(`/urls/${id}`);
   }
 });
@@ -221,7 +265,14 @@ app.post("/register", (req, res) => {
 
 // removes URL resource from object
 app.post("/urls/:id/delete", (req, res) => {
+  const idCookie = req.cookies["user_id"];
   const id = req.params.id;
+
+  if (urlDatabase[id].userID !== idCookie) {
+    res.status(403).send("You can only delete a tinyURL if you created it");
+    return;
+  }
+
   delete urlDatabase[id];
   res.redirect("/urls");
 });
