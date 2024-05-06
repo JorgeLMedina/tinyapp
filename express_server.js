@@ -4,6 +4,7 @@
 
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 
 const app = express();
 app.use(cookieParser());
@@ -229,12 +230,15 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  if (user.password !== password) { // EMAIL CORRECT PASSWORD INCORRECT -------------------------------------
+  const hashedPassword = user.password;
+
+  if (!bcrypt.compareSync(password, hashedPassword)) { // EMAIL CORRECT PASSWORD INCORRECT 
     res.status(403).send('Wrong password.');
     return;
   }  // HAPPY PATH! email and password found in "users" object
 
   const userId = user.id;
+
   res.cookie('user_id', userId);
   res.redirect("/urls");
 });
@@ -248,6 +252,8 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   if (email === "" || password === "") {
     res.status(400).send('Email and/or password cannot be empty.');
     return;
@@ -258,7 +264,7 @@ app.post("/register", (req, res) => {
     users[id] = {
       id,
       email,
-      password
+      password: hashedPassword
     };
     const templateVars = {
       user: users[id]
