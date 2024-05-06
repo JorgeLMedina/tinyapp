@@ -11,7 +11,7 @@ const PORT = 8080;
 
 app.use(cookieSession({
   name: 'session',
-  keys: ['jorgeluis']
+  keys: ['jorgeluis-01', 'jorgeluis-02']
 }));
 
 app.set("view engine", "ejs");
@@ -84,11 +84,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  // const id = req.cookies["user_id"];
   const id = req.session.user_id;
   const urlDatabaseByID = urlsForUser(id, urlDatabase);
   const templateVars = {
-    // username: req.cookies["username"],
     urls: urlDatabaseByID,
     user: users[id]
   };
@@ -101,7 +99,6 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  // const id = req.cookies["user_id"];
   const id = req.session.user_id;
   const templateVars = {
     user: users[id]
@@ -116,7 +113,6 @@ app.get("/urls/new", (req, res) => {
 
 // logs /register template 
 app.get("/register", (req, res) => {
-  // const id = req.cookies["user_id"];
   const id = req.session.user_id;
   const urlDatabaseByID = urlsForUser(id, urlDatabase);
   const templateVars = {
@@ -133,7 +129,6 @@ app.get("/register", (req, res) => {
 
 // renders login.ejs
 app.get("/login", (req, res) => {
-  // const id = req.cookies["user_id"];
   const id = req.session.user_id;
   const templateVars = {
     urls: urlDatabase,
@@ -165,17 +160,14 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  // const userId = req.cookies["user_id"];
   const userId = req.session.user_id;
   const id = req.params.id;
   const longURL = urlDatabase[id].longURL;
-  // console.log(longURL);
   const templateVars = {
     id,
     longURL,
     user: users[userId]
   };
-  // const urlByUserArr = Object.keys(urlsForUser(userId));
 
   if (urlDatabase[id] === undefined) {
     res.status(403).send('The tinyURL you are trying to reach hasn\'t been registered.');
@@ -209,7 +201,6 @@ app.get("/hello", (req, res) => {
 
 // logs the request body and gives a dummy response
 app.post("/urls", (req, res) => {
-  // const idCookie = req.cookies["user_id"];
   const idCookie = req.session.user_id;
 
   if (idCookie === undefined) {
@@ -252,7 +243,6 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  // res.clearCookie('user_id');
   req.session = null;
   res.redirect("/login");
 });
@@ -290,7 +280,6 @@ app.post("/register", (req, res) => {
 
 // removes URL resource from object
 app.post("/urls/:id/delete", (req, res) => {
-  // const idCookie = req.cookies["user_id"];
   const idCookie = req.session.user_id;
   const id = req.params.id;
 
@@ -305,7 +294,6 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const userID = req.params.id;
-  // const idCookie = req.cookies["user_id"];
   const idCookie = req.session.user_id;
 
   if (urlDatabase[userID].userID !== idCookie) {
@@ -314,7 +302,6 @@ app.post("/urls/:id", (req, res) => {
   }
 
   urlDatabase[id].longURL = req.body.updatedURL;
-  // console.log(urlDatabase)
   res.redirect("/urls");
 });
 
