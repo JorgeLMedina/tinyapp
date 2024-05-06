@@ -59,12 +59,12 @@ const findUserByEmail = function (email, users) {
 };
 
 // Returns only URLs created by logged in user from urlDatabase
-const urlsForUser = function (id) {
+const urlsForUser = function (id, database) {
   const urlsByUserId = {};
 
-  for (const key in urlDatabase) {
-    if (urlDatabase[key].userID === id) {
-      urlsByUserId[key] = urlDatabase[key];
+  for (const key in database) {
+    if (database[key].userID === id) {
+      urlsByUserId[key] = database[key];
     }
   }
   return urlsByUserId;
@@ -80,7 +80,7 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const id = req.cookies["user_id"];
-  const urlDatabaseByID = urlsForUser(id);
+  const urlDatabaseByID = urlsForUser(id, urlDatabase);
   const templateVars = {
     // username: req.cookies["username"],
     urls: urlDatabaseByID,
@@ -110,7 +110,7 @@ app.get("/urls/new", (req, res) => {
 // logs /register template 
 app.get("/register", (req, res) => {
   const id = req.cookies["user_id"];
-  const urlDatabaseByID = urlsForUser(id);
+  const urlDatabaseByID = urlsForUser(id, urlDatabase);
   const templateVars = {
     urls: urlDatabaseByID,
     user: users[id]
@@ -143,8 +143,13 @@ app.get("/u/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id].longURL;
 
+  if (urlDatabase[id] === undefined) {
+    res.status(403).send(`This tinyURL hasn't yet been registered.`);
+    return;
+  }
+
   if (longURL === undefined) {
-    res.status(403).send(`This short URL doesn't have anything assigned yet, please adjust that at 'localhost:8080/urls/new'`);
+    res.status(403).send(`This tinyURL doesn't have anything assigned yet, please adjust that at 'localhost:8080/urls/new'`);
   } else {
     res.redirect(longURL);
   }
@@ -162,6 +167,10 @@ app.get("/urls/:id", (req, res) => {
   };
   // const urlByUserArr = Object.keys(urlsForUser(userId));
 
+  if (urlDatabase[id] === undefined) {
+    res.status(403).send('The tinyURL you are trying to reach hasn\'t been registered.');
+    return;
+  }
 
   if (userId === undefined) {
     res.status(403).send('Please sign in to be able to generate tinyURLs');
@@ -278,8 +287,16 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[id] = req.body.updatedURL;
-  console.log(urlDatabase)
+  const userID = req.params.id;
+  const idCookie = req.cookies["user_id"];
+
+  if (urlDatabase[userID].userID !== idCookie) {
+    res.status(403).send("Unable to edit. Only the creator of a tinyURL can edit it.");
+    return;
+  }
+
+  urlDatabase[id].longURL = req.body.updatedURL;
+  // console.log(urlDatabase)
   res.redirect("/urls");
 });
 
