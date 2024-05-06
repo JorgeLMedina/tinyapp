@@ -3,12 +3,16 @@
 /////////////////////////
 
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
 const app = express();
-app.use(cookieParser());
 const PORT = 8080;
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['jorgeluis']
+}));
 
 app.set("view engine", "ejs");
 
@@ -80,7 +84,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const id = req.cookies["user_id"];
+  // const id = req.cookies["user_id"];
+  const id = req.session.user_id;
   const urlDatabaseByID = urlsForUser(id, urlDatabase);
   const templateVars = {
     // username: req.cookies["username"],
@@ -96,7 +101,8 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const id = req.cookies["user_id"];
+  // const id = req.cookies["user_id"];
+  const id = req.session.user_id;
   const templateVars = {
     user: users[id]
   };
@@ -110,7 +116,8 @@ app.get("/urls/new", (req, res) => {
 
 // logs /register template 
 app.get("/register", (req, res) => {
-  const id = req.cookies["user_id"];
+  // const id = req.cookies["user_id"];
+  const id = req.session.user_id;
   const urlDatabaseByID = urlsForUser(id, urlDatabase);
   const templateVars = {
     urls: urlDatabaseByID,
@@ -126,7 +133,8 @@ app.get("/register", (req, res) => {
 
 // renders login.ejs
 app.get("/login", (req, res) => {
-  const id = req.cookies["user_id"];
+  // const id = req.cookies["user_id"];
+  const id = req.session.user_id;
   const templateVars = {
     urls: urlDatabase,
     user: users[id]
@@ -157,7 +165,8 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const id = req.params.id;
   const longURL = urlDatabase[id].longURL;
   // console.log(longURL);
@@ -200,7 +209,8 @@ app.get("/hello", (req, res) => {
 
 // logs the request body and gives a dummy response
 app.post("/urls", (req, res) => {
-  const idCookie = req.cookies["user_id"];
+  // const idCookie = req.cookies["user_id"];
+  const idCookie = req.session.user_id;
 
   if (idCookie === undefined) {
     res.status(403).send('Please register and/or login to be able to tinyURL');
@@ -216,8 +226,6 @@ app.post("/urls", (req, res) => {
 
 // sets up a cookie with the info taken by the form at _header.ejs
 app.post("/login", (req, res) => {
-  // res.cookie('user', req.body.email);
-
   const email = req.body.email;
   const password = req.body.password;
   const user = findUserByEmail(email, users);
@@ -239,12 +247,13 @@ app.post("/login", (req, res) => {
 
   const userId = user.id;
 
-  res.cookie('user_id', userId);
+  req.session.user_id = userId;
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -269,7 +278,8 @@ app.post("/register", (req, res) => {
     const templateVars = {
       user: users[id]
     };
-    res.cookie("user_id", id);
+
+    req.session.user_id = id;
     res.redirect("/urls");
     return;
   }
@@ -280,7 +290,8 @@ app.post("/register", (req, res) => {
 
 // removes URL resource from object
 app.post("/urls/:id/delete", (req, res) => {
-  const idCookie = req.cookies["user_id"];
+  // const idCookie = req.cookies["user_id"];
+  const idCookie = req.session.user_id;
   const id = req.params.id;
 
   if (urlDatabase[id].userID !== idCookie) {
@@ -294,7 +305,8 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const userID = req.params.id;
-  const idCookie = req.cookies["user_id"];
+  // const idCookie = req.cookies["user_id"];
+  const idCookie = req.session.user_id;
 
   if (urlDatabase[userID].userID !== idCookie) {
     res.status(403).send("Unable to edit. Only the creator of a tinyURL can edit it.");
