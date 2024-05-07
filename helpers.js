@@ -1,5 +1,5 @@
 // Finds if the users object already has a user registered with the email
-const findUserByEmail = function (email, users) {
+const getUserByEmail = function (email, users) {
   for (const key in users) {
     if (users[key].email === email) {
       return users[key];
@@ -8,4 +8,4 @@ const findUserByEmail = function (email, users) {
   return null;
 };
 
-module.exports = findUserByEmail;
+module.exports = getUserByEmail;

@@ -5,7 +5,7 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
-const findUserByEmail = require("./helpers");
+const getUserByEmail = require("./helpers");
 
 const app = express();
 const PORT = 8080;
@@ -210,7 +210,7 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = findUserByEmail(email, users);
+  const user = getUserByEmail(email, users);
 
   if (email === "" || password === "") { // No email or password input
     res.status(403).send('Email and/or password cannot be empty.');
@@ -249,7 +249,7 @@ app.post("/register", (req, res) => {
     return;
   }
 
-  if (!findUserByEmail(email, users)) {
+  if (!getUserByEmail(email, users)) {
     const id = generateRandomString();
     users[id] = {
       id,
