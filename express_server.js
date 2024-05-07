@@ -5,6 +5,7 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
+const findUserByEmail = require("./helpers");
 
 const app = express();
 const PORT = 8080;
@@ -52,16 +53,6 @@ const users = {
 function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 }
-
-// Finds if the users object already has a user registered with the email
-const findUserByEmail = function (email, users) {
-  for (const key in users) {
-    if (users[key].email === email) {
-      return users[key];
-    }
-  }
-  return null;
-};
 
 // Returns only URLs created by logged in user from urlDatabase
 const urlsForUser = function (id, database) {
