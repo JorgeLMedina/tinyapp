@@ -19,6 +19,8 @@ app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 
+app.use(express.json());
+
 /////////////////////////
 // OBJECTS
 /////////////////////////
@@ -71,7 +73,8 @@ const urlsForUser = function (id, database) {
 /////////////////////////
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  // res.send("Hello!");
+  res.redirect("/login");
 });
 
 app.get("/urls", (req, res) => {
@@ -96,7 +99,7 @@ app.get("/urls/new", (req, res) => {
   };
 
   if (id === undefined) {
-    res.render("login", templateVars);
+    res.redirect("/login");
   } else {
     res.render("urls_new", templateVars);
   }
@@ -129,19 +132,20 @@ app.get("/login", (req, res) => {
   if (id === undefined) {
     res.render("login", templateVars);
   } else {
-    res.render("urls_index", templateVars);
+    res.redirect("/urls");
   }
 });
 
 // Redirects the shortened version to actual URL assigned in urlDatabase
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id].longURL;
 
   if (urlDatabase[id] === undefined) {
     res.status(403).send(`This tinyURL hasn't yet been registered.`);
     return;
   }
+
+  const longURL = urlDatabase[id].longURL;
 
   if (longURL === undefined) {
     res.status(403).send(`This tinyURL doesn't have anything assigned yet, please adjust that at 'localhost:8080/urls/new'`);
@@ -153,17 +157,18 @@ app.get("/u/:id", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.user_id;
   const id = req.params.id;
+
+  if (urlDatabase[id] === undefined) {
+    res.status(404).send('The tinyURL you are trying to reach hasn\'t been registered.');
+    return;
+  }
+
   const longURL = urlDatabase[id].longURL;
   const templateVars = {
     id,
     longURL,
     user: users[userId]
   };
-
-  if (urlDatabase[id] === undefined) {
-    res.status(403).send('The tinyURL you are trying to reach hasn\'t been registered.');
-    return;
-  }
 
   if (userId === undefined) {
     res.status(403).send('Please sign in to be able to generate tinyURLs');
@@ -176,6 +181,7 @@ app.get("/urls/:id", (req, res) => {
   }
 
   res.render("urls_show", templateVars);
+  return;
 });
 
 app.get("/urls.json", (req, res) => {
@@ -292,7 +298,7 @@ app.post("/urls/:id", (req, res) => {
     return;
   }
 
-  urlDatabase[id].longURL = req.body.updatedURL;
+  urlDatabase[userID].longURL = req.body.updatedURL;
   res.redirect("/urls");
 });
 
